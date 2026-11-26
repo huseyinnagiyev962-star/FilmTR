@@ -1348,8 +1348,9 @@
             dialog.classList.add("flex");
 
             document.getElementById("confirm-action-btn").onclick = () => {
+                const cb = pendingConfirmCallback;
                 closeConfirmDialog();
-                if (pendingConfirmCallback) pendingConfirmCallback();
+                if (cb) cb();
             };
         }
 

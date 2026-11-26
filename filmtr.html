@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FilmTR - Türkçe Dublaj Sinema Keyfi</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome İkonları -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        cinema: {
+                            bg: '#0b0d12',
+                            card: '#141821',
+                            cardHover: '#1b202c',
+                            border: '#232936',
+                            red: '#e50914',
+                            redHover: '#b80710',
+                            gold: '#f5c518'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0d12;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0d12;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #232936;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #e50914;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .movie-card:hover .movie-poster {
+            transform: scale(1.06);
+        }
+        .movie-card:hover .play-overlay {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-cinema-red selection:text-white">
+
+    <!-- Bildirim (Toast) Kutusu -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Üst Navigasyon Barı -->
+    <header class="sticky top-0 z-40 bg-cinema-bg/90 backdrop-blur-md border-b border-cinema-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap items-center justify-between gap-4 py-3.5">
+                <!-- Logo -->
+                <a href="#" onclick="resetFilters(event)" class="flex items-center gap-2.5 group">
+                    <div class="w-10 h-10 rounded-xl bg-cinema-red flex items-center justify-center shadow-lg shadow-cinema-red/30 group-hover:scale-105 transition-transform">
+                        <i class="fa-solid fa-film text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-extrabold tracking-tight text-white">Film<span class="text-cinema-red">TR</span></span>
+                        <span class="hidden sm:inline-block ml-2 text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-gray-300">Türkçe Dublaj</span>
+                    </div>
+                </a>
+
+                <!-- Arama Çubuğu -->
+                <div class="order-3 md:order-2 w-full md:w-96 lg:w-[440px]">
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="text" id="search-input" placeholder="Film adı, konu veya yıl ara..." autocomplete="off"
+                            class="w-full bg-cinema-card border border-cinema-border text-sm text-white placeholder-gray-400 rounded-xl pl-10 pr-9 py-2.5 focus:outline-none focus:border-cinema-red focus:ring-1 focus:ring-cinema-red transition-all">
+                        <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Yönetici İşlem Alanı -->
+                <div id="auth-controls" class="order-2 md:order-3 flex items-center gap-2.5">
+                    <!-- Dinamik olarak JS ile doldurulur -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Ana İçerik Alanı -->
+    <main class="flex-grow">
+        <!-- Öne Çıkan Film Vitrini (Hero Banner) -->
+        <section id="hero-section" class="relative w-full overflow-hidden border-b border-cinema-border">
+            <!-- JS ile doldurulacak -->
+        </section>
+
+        <!-- Filtreleme ve Film Listesi Bölümü -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Tür Filtreleme Hapları & Sıralama -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div id="genre-filters" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                    <!-- JS ile oluşturulacak -->
+                </div>
+
+                <div class="flex items-center justify-between md:justify-end gap-3 shrink-0">
+                    <span id="movie-count-badge" class="text-xs font-medium text-gray-400 bg-cinema-card px-3 py-2 rounded-xl border border-cinema-border">
+                        0 Film Listeleniyor
+                    </span>
+                    <select id="sort-select" onchange="renderMovies()" 
+                        class="bg-cinema-card border border-cinema-border text-xs sm:text-sm text-gray-200 rounded-xl px-3.5 py-2 focus:outline-none focus:border-cinema-red cursor-pointer">
+                        <option value="newest">En Yeniler</option>
+                        <option value="rating">En Yüksek Puan</option>
+                        <option value="year">Yapım Yılı (Yeni-Eski)</option>
+                        <option value="az">İsme Göre (A-Z)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Film Kartları Gridi -->
+            <div id="movies-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+                <!-- Film kartları JS ile buraya basılır -->
+            </div>
+
+            <!-- Sonuç Bulunamadı Durumu -->
+            <div id="empty-state" class="hidden flex-col items-center justify-center py-20 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-cinema-card border border-cinema-border flex items-center justify-center mb-4 text-gray-500 text-2xl">
+                    <i class="fa-solid fa-film"></i>
+                </div>
+                <h3 class="text-lg font-bold text-white mb-1">Aradığınız kriterlere uygun film bulunamadı</h3>
+                <p class="text-sm text-gray-400 max-w-md mb-5">Farklı bir arama kelimesi deneyebilir veya tür filtrelerini sıfırlayabilirsiniz.</p>
+                <button onclick="resetFilters()" class="px-5 py-2.5 bg-cinema-red hover:bg-cinema-redHover text-white text-sm font-semibold rounded-xl transition-colors">
+                    Tüm Filmleri Göster
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Alt Bilgi (Footer) -->
+    <footer class="bg-cinema-card border-t border-cinema-border mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-white">Film<span class="text-cinema-red">TR</span></span>
+                <span>•</span>
+                <span>Kesintisiz Türkçe Dublaj Sinema Platformu</span>
+            </div>
+            <p class="text-xs text-gray-500">© 2026 FilmTR. Tüm hakları saklıdır.</p>
+        </div>
+    </footer>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 1: FİLM İZLEME VE PUANLAMA EKRANI                               -->
+    <!-- ===================================================================== -->
+    <div id="watch-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto">
+        <div class="relative w-full max-w-4xl bg-cinema-card border border-cinema-border rounded-2xl shadow-2xl overflow-hidden my-auto">
+            <!-- Modal Üst Bar -->
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-cinema-border bg-cinema-bg/60">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="px-2 py-0.5 text-[11px] font-bold bg-cinema-red text-white rounded">TÜRKÇE DUBLAJ</span>
+                    <h3 id="watch-title-top" class="font-bold text-white truncate text-base sm:text-lg">Film Adı</h3>
+                </div>
+                <button onclick="closeWatchModal()" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-cinema-red text-gray-300 hover:text-white flex items-center justify-center transition-colors shrink-0">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Video Oynatıcı Konteyneri -->
+            <div id="player-wrapper" class="relative w-full aspect-video bg-black flex items-center justify-center">
+                <!-- Uygulama İçi Oynatıcı JS ile yüklenir -->
+            </div>
+
+            <!-- Film Detayları ve Etkileşimli Puanlama -->
+            <div class="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Sol: Film Bilgisi -->
+                <div class="lg:col-span-2 space-y-3">
+                    <div class="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm">
+                        <span id="watch-year" class="px-2.5 py-1 rounded-lg bg-white/10 text-gray-200 font-medium">2024</span>
+                        <span id="watch-genre" class="px-2.5 py-1 rounded-lg bg-cinema-red/20 text-cinema-red border border-cinema-red/30 font-semibold">Bilim Kurgu</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-medium">
+                            <i class="fa-solid fa-closed-captioning mr-1"></i>1080p HD • Türkçe Dublaj
+                        </span>
+                    </div>
+                    <h2 id="watch-title" class="text-xl sm:text-2xl font-extrabold text-white">Film Başlığı</h2>
+                    <p id="watch-description" class="text-sm text-gray-300 leading-relaxed">Film açıklaması burada yer alacak.</p>
+                </div>
+
+                <!-- Sağ: Canlı Puanlama Kutusu -->
+                <div class="bg-cinema-bg border border-cinema-border rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">İzleyici Puanı</span>
+                            <div class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-star text-cinema-gold text-lg"></i>
+                                <span id="watch-avg-rating" class="text-xl font-extrabold text-white">0.0</span>
+                                <span class="text-xs text-gray-400">/ 5</span>
+                            </div>
+                        </div>
+                        <p id="watch-vote-count" class="text-xs text-gray-400 mb-4">Toplam 0 oy kullanıldı</p>
+                    </div>
+
+                    <div class="pt-3 border-t border-cinema-border">
+                        <p id="rating-prompt-text" class="text-xs font-medium text-gray-300 mb-2">Bu filme puan verin:</p>
+                        <div id="star-rating-buttons" class="flex items-center justify-between gap-1">
+                            <!-- 1-5 Yıldız butonları JS ile oluşturulur -->
+                        </div>
+                        <p id="user-rated-badge" class="hidden mt-2 text-[11px] text-emerald-400 font-medium">
+                            <i class="fa-solid fa-circle-check mr-1"></i>Puanınız kaydedildi! Fikriniz değişirse güncelleyebilirsiniz.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 2: YÖNETİCİ GİRİŞ EKRANI (BOŞ VE İPUCUSUZ ALANLAR)               -->
+    <!-- ===================================================================== -->
+    <div id="login-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="w-full max-w-md bg-cinema-card border border-cinema-border rounded-2xl shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-cinema-border">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-cinema-red/20 text-cinema-red flex items-center justify-center">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-lg">Yönetici Girişi</h3>
+                </div>
+                <button onclick="closeLoginModal()" class="text-gray-400 hover:text-white p-1.5 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="admin-login-form" onsubmit="handleAdminLogin(event)" autocomplete="off" class="p-6 space-y-4">
+                <div>
+                    <label for="admin-username" class="block text-xs font-semibold text-gray-300 mb-1.5">Kullanıcı Adı</label>
+                    <input type="text" id="admin-username" name="admin_user_field" required autocomplete="off"
+                        class="w-full bg-cinema-bg border border-cinema-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cinema-red">
+                </div>
+
+                <div>
+                    <label for="admin-password" class="block text-xs font-semibold text-gray-300 mb-1.5">Şifre</label>
+                    <input type="password" id="admin-password" name="admin_pass_field" required autocomplete="new-password"
+                        class="w-full bg-cinema-bg border border-cinema-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cinema-red">
+                </div>
+
+                <div id="login-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+                    Hatalı kullanıcı adı veya şifre! Lütfen tekrar deneyin.
+                </div>
+
+                <button type="button" onclick="handleAdminLogin(event)" class="w-full py-3 bg-cinema-red hover:bg-cinema-redHover text-white font-bold text-sm rounded-xl shadow-lg shadow-cinema-red/25 transition-all">
+                    Giriş Yap
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 3: YÖNETİCİ FİLM EKLEME & YÖNETME PANELİ (SADECE ADMIN)          -->
+    <!-- ===================================================================== -->
+    <div id="admin-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto">
+        <div class="w-full max-w-6xl bg-cinema-card border border-cinema-border rounded-2xl shadow-2xl overflow-hidden my-auto">
+            <!-- Panel Başlığı -->
+            <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-cinema-border bg-cinema-bg/70">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-cinema-red text-white flex items-center justify-center shadow">
+                        <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-white text-lg">Yönetici Film Yönetim Paneli</h3>
+                        <p class="text-xs text-gray-400">Yeni Türkçe dublaj film ekleyin, mevcut filmleri düzenleyin veya kaldırın.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <button type="button" onclick="confirmResetDefaults()" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors">
+                        <i class="fa-solid fa-rotate-left mr-1.5"></i>Varsayılan Filmlere Sıfırla
+                    </button>
+                    <button onclick="closeAdminModal()" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-cinema-red text-gray-300 hover:text-white flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel İçeriği: Sol Form, Sağ Liste -->
+            <div class="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-h-[82vh] overflow-y-auto">
+                
+                <!-- SOL: Yeni Film Ekleme / Düzenleme Formu (5 Sütun) -->
+                <div class="lg:col-span-5 bg-cinema-bg border border-cinema-border rounded-2xl p-5 h-fit">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 id="form-mode-title" class="font-bold text-white text-base flex items-center gap-2">
+                            <i class="fa-solid fa-plus-circle text-cinema-red"></i> Yeni Film Ekle
+                        </h4>
+                        <button type="button" id="cancel-edit-btn" onclick="resetAdminForm()" class="hidden text-xs text-gray-400 hover:text-white underline">
+                            Düzenlemeyi İptal Et
+                        </button>
+                    </div>
+
+                    <form id="movie-form" onsubmit="handleSaveMovie(event)" class="space-y-4">
+                        <input type="hidden" id="edit-movie-id" value="">
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Film Adı *</label>
+                            <input type="text" id="movie-title" required placeholder="Örn: Başlangıç (Inception)"
+                                class="w-full bg-cinema-card border border-cinema-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-cinema-red">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-300 mb-1">Film Türü *</label>
+                                <select id="movie-genre" required
+                                    class="w-full bg-cinema-card border border-cinema-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-cinema-red">
+                                    <option value="Aksiyon">Aksiyon</option>
+                                    <option value="Bilim Kurgu">Bilim Kurgu</option>
+                                    <option value="Dram">Dram</option>
+                                    <option value="Gerilim">Gerilim</option>
+                                    <option value="Komedi">Komedi</option>
+                                    <option value="Korku">Korku</option>
+                                    <option value="Animasyon">Animasyon</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-300 mb-1">Yapım Yılı *</label>
+                                <input type="number" id="movie-year" required min="1950" max="2030" value="2024"
+                                    class="w-full bg-cinema-card border border-cinema-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-cinema-red">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Film Konusu / Açıklama *</label>
+                            <textarea id="movie-description" rows="3" required placeholder="Filmin kısa özetini yazın..."
+                                class="w-full bg-cinema-card border border-cinema-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cinema-red"></textarea>
+                        </div>
+
+                        <!-- Afiş Görseli (URL veya Dosya Yükleme) -->
+                        <div class="p-3.5 rounded-xl bg-cinema-card border border-cinema-border space-y-2.5">
+                            <label class="block text-xs font-semibold text-gray-200">Afiş Görseli (2:3 Dikey Önerilir - URL veya Dosya) *</label>
+                            <input type="text" id="movie-poster-url" placeholder="https://... görsel bağlantısı yapıştırın" oninput="previewPosterUrl(this.value)"
+                                class="w-full bg-cinema-bg border border-cinema-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cinema-red">
+                            
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs text-gray-200 transition-colors">
+                                    <i class="fa-solid fa-image text-cinema-gold"></i>
+                                    <span>Cihazdan Görsel Seç</span>
+                                    <input type="file" id="movie-poster-file" accept="image/*" onchange="handlePosterFileSelect(event)" class="hidden">
+                                </label>
+                                <img id="poster-preview-thumb" src="" alt="Önizleme" class="hidden w-10 h-14 object-cover rounded border border-cinema-border">
+                            </div>
+                        </div>
+
+                        <!-- Video Kaynağı (URL veya Yerel Video Dosyası) -->
+                        <div class="p-3.5 rounded-xl bg-cinema-card border border-cinema-border space-y-2.5">
+                            <label class="block text-xs font-semibold text-gray-200">Video Kaynağı (Doğrudan MP4/WebM URL veya Dosya) *</label>
+                            <input type="text" id="movie-video-url" placeholder="https://.../film.mp4"
+                                class="w-full bg-cinema-bg border border-cinema-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cinema-red">
+                            
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs text-gray-200 transition-colors">
+                                    <i class="fa-solid fa-video text-cinema-red"></i>
+                                    <span>Video Dosyası Seç (MP4/WebM)</span>
+                                    <input type="file" id="movie-video-file" accept="video/*" onchange="handleVideoFileSelect(event)" class="hidden">
+                                </label>
+                                <span id="selected-video-name" class="text-[11px] text-emerald-400 truncate max-w-[140px]"></span>
+                            </div>
+                            <p class="text-[11px] text-gray-400">Not: Uygulama içi oynatıcıda kesintisiz oynatma için doğrudan .mp4/.webm bağlantısı veya cihazınızdan video dosyası seçmeniz önerilir.</p>
+                        </div>
+
+                        <div class="flex items-center gap-2 pt-1">
+                            <input type="checkbox" id="movie-featured" class="w-4 h-4 accent-cinema-red rounded cursor-pointer">
+                            <label for="movie-featured" class="text-xs text-gray-300 cursor-pointer">Ana sayfada öne çıkan film (Banner) yap</label>
+                        </div>
+
+                        <button type="button" onclick="handleSaveMovie(event)" id="save-movie-btn" class="w-full py-3 bg-cinema-red hover:bg-cinema-redHover text-white font-bold text-sm rounded-xl shadow-lg shadow-cinema-red/25 transition-all">
+                            <i class="fa-solid fa-check mr-1.5"></i> Filmi Yayınla
+                        </button>
+                    </form>
+                </div>
+
+                <!-- SAĞ: Mevcut Filmleri Yönetme Listesi (7 Sütun) -->
+                <div class="lg:col-span-7 bg-cinema-bg border border-cinema-border rounded-2xl p-5 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-bold text-white text-base flex items-center gap-2">
+                            <i class="fa-solid fa-list-ul text-cinema-gold"></i> Yayındaki Filmler (<span id="admin-total-count">0</span>)
+                        </h4>
+                        <span class="text-xs text-gray-400">Değişiklikler anında kaydedilir</span>
+                    </div>
+
+                    <div id="admin-movie-list" class="space-y-3 overflow-y-auto pr-1 max-h-[600px]">
+                        <!-- Admin film satırları JS ile buraya basılır -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- ÖZEL ONAY PENCERESİ (confirm() YERİNE MODERN MODAL)                    -->
+    <!-- ===================================================================== -->
+    <div id="confirm-dialog" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="w-full max-w-sm bg-cinema-card border border-cinema-border rounded-2xl p-6 shadow-2xl text-center space-y-4">
+            <div class="w-12 h-12 rounded-full bg-red-500/15 text-cinema-red flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h4 id="confirm-title" class="text-lg font-bold text-white">Emin misiniz?</h4>
+            <p id="confirm-message" class="text-xs text-gray-300 leading-relaxed">Bu işlem geri alınamaz.</p>
+            <div class="flex items-center justify-center gap-3 pt-2">
+                <button onclick="closeConfirmDialog()" class="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-sm font-semibold text-gray-200 transition-colors">
+                    Vazgeç
+                </button>
+                <button id="confirm-action-btn" class="flex-1 py-2.5 rounded-xl bg-cinema-red hover:bg-cinema-redHover text-sm font-semibold text-white transition-colors">
+                    Evet, Onayla
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- UYGULAMA MANTIĞI (JAVASCRIPT)                                         -->
+    <!-- ===================================================================== -->
+    <script>
+        /**
+         * YÖNETİCİ KİMLİK BİLGİLERİ
+         */
+        const ADMIN_CREDENTIALS = {
+            username: "nagiyev",
+            password: "2009"
+        };
+
+        const STORAGE_KEYS = {
+            MOVIES: "filmtr_movies_v2",
+            USER_RATINGS: "filmtr_user_ratings_v2",
+            ADMIN_SESSION: "filmtr_admin_logged_in_v2"
+        };
+
+        const GENRES = ["Tümü", "Aksiyon", "Bilim Kurgu", "Dram", "Gerilim", "Komedi", "Korku", "Animasyon"];
+
+        /**
+         * ÖNCEDEN YÜKLENMİŞ TÜRKÇE DUBLAJ ÖRNEK FİLMLER
+         * Doğrudan tarayıcı içi HTML5 <video> oynatıcıda sorunsuz çalışan MP4 kaynakları kullanılmıştır.
+         */
+        const DEFAULT_MOVIES = [
+            {
+                id: "mov-1",
+                title: "Yıldızlararası (Interstellar)",
+                year: 2014,
+                genre: "Bilim Kurgu",
+                description: "İnsanlığın dünyadaki yaşam süresi sona ererken, bir grup kaşif insanlık tarihinin en önemli görevini üstlenir: Yıldızlar ötesine yolculuk ederek insanlığın geleceğini kurtarabilecek yeni bir gezegen bulmak.",
+                poster: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=600&q=80",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+                ratingSum: 49,
+                ratingCount: 10,
+                featured: true,
+                createdAt: 1700000006
+            },
+            {
+                id: "mov-2",
+                title: "Başlangıç (Inception)",
+                year: 2010,
+                genre: "Aksiyon",
+                description: "Dom Cobb, insanların en savunmasız oldukları rüya anında zihinlerinin derinliklerindeki değerli sırları çalma konusunda uzmanlaşmış yetenekli bir hırsızdır. Bu kez amacı bir fikri çalmak değil, yerleştirmektir.",
+                poster: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                ratingSum: 48,
+                ratingCount: 10,
+                featured: false,
+                createdAt: 1700000005
+            },
+            {
+                id: "mov-3",
+                title: "Kara Şövalye (The Dark Knight)",
+                year: 2008,
+                genre: "Aksiyon",
+                description: "Batman, Teğmen Jim Gordon ve Bölge Savcısı Harvey Dent'in yardımıyla Gotham sokaklarını suç örgütlerinden temizlemeye kararlıdır. Ancak Joker adındaki kaotik suç dehası şehri karanlığa sürükler.",
+                poster: "https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?auto=format&fit=crop&w=600&q=80",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+                ratingSum: 49,
+                ratingCount: 10,
+                featured: false,
+                createdAt: 1700000004
+            },
+            {
+                id: "mov-4",
+                title: "Esaretin Bedeli (The Shawshank Redemption)",
+                year: 1994,
+                genre: "Dram",
+                description: "Masum olmasına rağmen karısını öldürmek suçundan müebbet hapse mahkum edilen bankacı Andy Dufresne'in, Shawshank Hapishanesi'nde kurduğu dostluklar ve umudunu hiç kaybetmeden verdiği özgürlük mücadelesi.",
+                poster: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+                ratingSum: 50,
+                ratingCount: 10,
+                featured: false,
+                createdAt: 1700000003
+            },
+            {
+                id: "mov-5",
+                title: "Parazit (Parasite)",
+                year: 2019,
+                genre: "Gerilim",
+                description: "Yoksul Kim ailesinin tüm fertleri, teker teker zengin ve seçkin Park ailesinin hayatına sızarak kendilerini vazgeçilmez çalışanlar haline getirir. Ancak beklenmedik bir olay tüm dengeleri altüst eder.",
+                poster: "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=600&q=80",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+                ratingSum: 46,
+                ratingCount: 10,
+                featured: false,
+                createdAt: 1700000002
+            },
+            {
+                id: "mov-6",
+                title: "Dune: Çöl Gezegeni",
+                year: 2021,
+                genre: "Bilim Kurgu",
+                description: "Evrendeki en değerli madde olan 'baharat'ın tek kaynağı olan tehlikeli çöl gezegeni Arrakis'in kontrolü için galaksinin en güçlü hanedanları arasında amansız bir savaş başlar.",
+                poster: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?auto=format&fit=crop&w=600&q=80",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                ratingSum: 47,
+                ratingCount: 10,
+                featured: false,
+                createdAt: 1700000001
+            }
+        ];
+
+        // Uygulama Durumu (State)
+        let movies = [];
+        let userRatings = {};
+        let isAdmin = false;
+        let selectedGenre = "Tümü";
+        let searchQuery = "";
+        let activeWatchMovieId = null;
+        let tempUploadedPosterBase64 = "";
+        let tempUploadedVideoBlobUrl = "";
+
+        /**
+         * UYGULAMA BAŞLATMA
+         */
+        window.addEventListener("DOMContentLoaded", () => {
+            loadStateFromStorage();
+            renderAuthControls();
+            renderGenreFilters();
+            renderHeroBanner();
+            renderMovies();
+
+            const searchInput = document.getElementById("search-input");
+            searchInput.addEventListener("input", (e) => {
+                searchQuery = e.target.value.trim().toLowerCase();
+                document.getElementById("clear-search-btn").classList.toggle("hidden", searchQuery.length === 0);
+                renderMovies();
+            });
+        });
+
+        /**
+         * LOCALSTORAGE VERİ YÜKLEME & KAYDETME
+         */
+        function loadStateFromStorage() {
+            try {
+                const storedMovies = localStorage.getItem(STORAGE_KEYS.MOVIES);
+                if (storedMovies) {
+                    movies = JSON.parse(storedMovies);
+                } else {
+                    movies = JSON.parse(JSON.stringify(DEFAULT_MOVIES));
+                    saveMoviesToStorage();
+                }
+
+                const storedRatings = localStorage.getItem(STORAGE_KEYS.USER_RATINGS);
+                userRatings = storedRatings ? JSON.parse(storedRatings) : {};
+
+                isAdmin = sessionStorage.getItem(STORAGE_KEYS.ADMIN_SESSION) === "true";
+            } catch (err) {
+                console.error("Depolama okuma hatası:", err);
+                movies = JSON.parse(JSON.stringify(DEFAULT_MOVIES));
+            }
+        }
+
+        function saveMoviesToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEYS.MOVIES, JSON.stringify(movies));
+            } catch (err) {
+                showToast("Tarayıcı depolama alanı doldu! Çok büyük görsel yüklememeye çalışın.", "error");
+            }
+        }
+
+        function saveUserRatingsToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEYS.USER_RATINGS, JSON.stringify(userRatings));
+            } catch (err) {
+                console.error("Puan kaydetme hatası:", err);
+            }
+        }
+
+        /**
+         * YETKİLENDİRME VE ÜST MENÜ KONTROLLERİ
+         */
+        function renderAuthControls() {
+            const container = document.getElementById("auth-controls");
+            if (isAdmin) {
+                container.innerHTML = `
+                    <button onclick="openAdminModal()" class="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-cinema-red hover:bg-cinema-redHover text-white text-xs sm:text-sm font-bold shadow-lg shadow-cinema-red/25 transition-all">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Yönetici Paneli</span>
+                    </button>
+                    <button onclick="handleAdminLogout()" title="Çıkış Yap" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-cinema-card hover:bg-white/10 border border-cinema-border text-gray-300 hover:text-white text-xs sm:text-sm font-medium transition-colors">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span class="hidden sm:inline">Çıkış Yap</span>
+                    </button>
+                `;
+            } else {
+                container.innerHTML = `
+                    <button onclick="openLoginModal()" class="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-cinema-card hover:bg-cinema-cardHover border border-cinema-border text-gray-200 hover:text-white text-xs sm:text-sm font-semibold transition-all">
+                        <i class="fa-solid fa-user-shield text-cinema-red"></i>
+                        <span>Yönetici Girişi</span>
+                    </button>
+                `;
+            }
+        }
+
+        function openLoginModal() {
+            document.getElementById("login-error").classList.add("hidden");
+            const form = document.getElementById("admin-login-form");
+            form.reset();
+            document.getElementById("admin-username").value = "";
+            document.getElementById("admin-password").value = "";
+
+            const modal = document.getElementById("login-modal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            setTimeout(() => document.getElementById("admin-username").focus(), 100);
+        }
+
+        function closeLoginModal() {
+            document.getElementById("admin-username").value = "";
+            document.getElementById("admin-password").value = "";
+            const modal = document.getElementById("login-modal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById("admin-username").value.trim();
+            const password = document.getElementById("admin-password").value.trim();
+
+            if (username.toLowerCase() === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+                isAdmin = true;
+                try { sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, "true"); } catch (err) {}
+                closeLoginModal();
+                renderAuthControls();
+                renderMovies();
+                showToast("Yönetici girişi başarılı! Film ekleme ve yönetme yetkisi açıldı.", "success");
+            } else {
+                document.getElementById("login-error").classList.remove("hidden");
+                document.getElementById("admin-password").value = "";
+            }
+        }
+
+        function handleAdminLogout() {
+            isAdmin = false;
+            try { sessionStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION); } catch (err) {}
+            closeAdminModal();
+            renderAuthControls();
+            renderMovies();
+            showToast("Yönetici oturumu kapatıldı.", "info");
+        }
+
+        /**
+         * ÖNE ÇIKAN FİLM VİTRİNİ (HERO BANNER)
+         */
+        function renderHeroBanner() {
+            const heroSection = document.getElementById("hero-section");
+            if (!movies.length) {
+                heroSection.innerHTML = "";
+                return;
+            }
+
+            const featuredMovie = movies.find(m => m.featured) || movies[0];
+            const avg = getAverageRating(featuredMovie);
+
+            heroSection.innerHTML = `
+                <div class="relative min-h-[380px] sm:min-h-[440px] flex items-end">
+                    <img src="${escapeHtml(featuredMovie.poster)}" alt="${escapeHtml(featuredMovie.title)}" 
+                        onerror="this.src='https://placehold.co/1200x600/141821/e50914?text=FilmTR+Sinema'"
+                        class="absolute inset-0 w-full h-full object-cover object-center opacity-40 scale-105">
+                    
+                    <div class="absolute inset-0 bg-gradient-to-t from-cinema-bg via-cinema-bg/75 to-transparent"></div>
+                    <div class="absolute inset-0 bg-gradient-to-r from-cinema-bg via-cinema-bg/60 to-transparent"></div>
+
+                    <div class="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+                        <div class="max-w-2xl space-y-4">
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <span class="px-3 py-1 rounded-full bg-cinema-red text-white text-xs font-bold tracking-wide uppercase shadow-lg shadow-cinema-red/30">
+                                    <i class="fa-solid fa-fire mr-1"></i> Günün Öne Çıkanı
+                                </span>
+                                <span class="px-3 py-1 rounded-full bg-black/60 backdrop-blur border border-white/15 text-gray-200 text-xs font-semibold">
+                                    Türkçe Dublaj
+                                </span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur border border-cinema-gold/30 text-cinema-gold text-xs font-bold">
+                                    <i class="fa-solid fa-star"></i> ${avg}
+                                </span>
+                            </div>
+
+                            <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                                ${escapeHtml(featuredMovie.title)}
+                            </h1>
+
+                            <div class="flex items-center gap-3 text-xs sm:text-sm text-gray-300 font-medium">
+                                <span>${featuredMovie.year}</span>
+                                <span>•</span>
+                                <span class="text-cinema-red font-semibold">${escapeHtml(featuredMovie.genre)}</span>
+                                <span>•</span>
+                                <span>1080p Full HD</span>
+                            </div>
+
+                            <p class="text-sm sm:text-base text-gray-300 line-clamp-3 leading-relaxed">
+                                ${escapeHtml(featuredMovie.description)}
+                            </p>
+
+                            <div class="pt-2 flex flex-wrap items-center gap-3">
+                                <button onclick="openWatchModal('${featuredMovie.id}')" 
+                                    class="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-cinema-red hover:bg-cinema-redHover text-white font-bold text-sm sm:text-base shadow-xl shadow-cinema-red/30 hover:scale-[1.02] transition-all">
+                                    <i class="fa-solid fa-play"></i>
+                                    <span>Hemen İzle</span>
+                                </button>
+                                <button onclick="openWatchModal('${featuredMovie.id}')" 
+                                    class="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 backdrop-blur border border-white/15 text-white font-semibold text-sm sm:text-base transition-all">
+                                    <i class="fa-solid fa-star text-cinema-gold"></i>
+                                    <span>Puan Ver</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * TÜR FİLTRELEME HAPLARI
+         */
+        function renderGenreFilters() {
+            const container = document.getElementById("genre-filters");
+            container.innerHTML = GENRES.map(genre => {
+                const isActive = selectedGenre === genre;
+                return `
+                    <button onclick="selectGenre('${genre}')" 
+                        class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+                            isActive 
+                            ? 'bg-cinema-red text-white shadow-lg shadow-cinema-red/25' 
+                            : 'bg-cinema-card text-gray-300 hover:bg-cinema-cardHover hover:text-white border border-cinema-border'
+                        }">
+                        ${genre}
+                    </button>
+                `;
+            }).join("");
+        }
+
+        function selectGenre(genre) {
+            selectedGenre = genre;
+            renderGenreFilters();
+            renderMovies();
+        }
+
+        function clearSearch() {
+            searchQuery = "";
+            document.getElementById("search-input").value = "";
+            document.getElementById("clear-search-btn").classList.add("hidden");
+            renderMovies();
+        }
+
+        function resetFilters(e) {
+            if (e) e.preventDefault();
+            selectedGenre = "Tümü";
+            clearSearch();
+            renderGenreFilters();
+            renderMovies();
+        }
+
+        /**
+         * FİLM KARTLARINI LİSTELEME (SADECE ADMIN GİRİŞİNDE DÜZENLE/SİL AKTİF)
+         */
+        function renderMovies() {
+            const grid = document.getElementById("movies-grid");
+            const emptyState = document.getElementById("empty-state");
+            const countBadge = document.getElementById("movie-count-badge");
+            const sortBy = document.getElementById("sort-select").value;
+
+            let filtered = movies.filter(movie => {
+                const matchesGenre = selectedGenre === "Tümü" || movie.genre === selectedGenre;
+                const matchesSearch = !searchQuery || 
+                    movie.title.toLowerCase().includes(searchQuery) ||
+                    movie.description.toLowerCase().includes(searchQuery) ||
+                    String(movie.year).includes(searchQuery) ||
+                    movie.genre.toLowerCase().includes(searchQuery);
+                return matchesGenre && matchesSearch;
+            });
+
+            filtered.sort((a, b) => {
+                if (sortBy === "rating") return parseFloat(getAverageRating(b)) - parseFloat(getAverageRating(a));
+                if (sortBy === "year") return b.year - a.year;
+                if (sortBy === "az") return a.title.localeCompare(b.title, "tr");
+                return (b.createdAt || 0) - (a.createdAt || 0);
+            });
+
+            countBadge.textContent = `${filtered.length} Film Listeleniyor`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = "";
+                emptyState.classList.remove("hidden");
+                emptyState.classList.add("flex");
+                return;
+            }
+
+            emptyState.classList.add("hidden");
+            emptyState.classList.remove("flex");
+
+            grid.innerHTML = filtered.map(movie => {
+                const avg = getAverageRating(movie);
+                const adminCardControls = isAdmin ? `
+                    <div class="px-3.5 pb-3 pt-2 border-t border-cinema-border/70 flex items-center gap-2" onclick="event.stopPropagation()">
+                        <button type="button" onclick="openAdminAndEdit('${movie.id}')" 
+                            class="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-amber-500/20 text-gray-300 hover:text-amber-400 text-xs font-semibold transition-colors flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-pen text-[10px]"></i> Düzenle
+                        </button>
+                        <button type="button" onclick="confirmDeleteMovie('${movie.id}')" 
+                            class="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 text-gray-300 hover:text-red-400 text-xs font-semibold transition-colors flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-trash text-[10px]"></i> Sil
+                        </button>
+                    </div>
+                ` : "";
+
+                return `
+                    <article onclick="openWatchModal('${movie.id}')" 
+                        class="movie-card group cursor-pointer bg-cinema-card border border-cinema-border hover:border-cinema-red/60 rounded-2xl overflow-hidden flex flex-col shadow-lg transition-all duration-300 hover:-translate-y-1">
+                        
+                        <!-- Poster Alanı (2:3 Oran) -->
+                        <div class="relative aspect-[2/3] w-full bg-cinema-bg overflow-hidden">
+                            <img src="${escapeHtml(movie.poster)}" alt="${escapeHtml(movie.title)}" loading="lazy"
+                                onerror="this.src='https://placehold.co/400x600/141821/e50914?text=FilmTR'"
+                                class="movie-poster w-full h-full object-cover transition-transform duration-500">
+                            
+                            <!-- Sol Üst: Türkçe Dublaj Rozeti -->
+                            <span class="absolute top-2.5 left-2.5 px-2 py-1 rounded-lg bg-cinema-red/95 backdrop-blur-sm text-white text-[10px] font-extrabold tracking-wide shadow">
+                                Türkçe Dublaj
+                            </span>
+
+                            <!-- Sağ Üst: Yıldız Puanı -->
+                            <span class="absolute top-2.5 right-2.5 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-black/80 backdrop-blur-sm border border-white/10 text-cinema-gold text-xs font-bold shadow">
+                                <i class="fa-solid fa-star text-[10px]"></i> ${avg}
+                            </span>
+
+                            <!-- Hover Oynat Butonu Katmanı -->
+                            <div class="play-overlay opacity-0 transition-opacity duration-300 absolute inset-0 bg-black/55 flex items-center justify-center">
+                                <div class="w-12 h-12 rounded-full bg-cinema-red text-white flex items-center justify-center shadow-xl shadow-cinema-red/50 transform scale-95 group-hover:scale-100 transition-transform">
+                                    <i class="fa-solid fa-play text-lg ml-0.5"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Alt Bilgi Alanı -->
+                        <div class="p-3.5 flex-grow flex flex-col justify-between">
+                            <h3 class="font-bold text-sm text-white group-hover:text-cinema-red transition-colors line-clamp-1 mb-1.5" title="${escapeHtml(movie.title)}">
+                                ${escapeHtml(movie.title)}
+                            </h3>
+                            <div class="flex items-center justify-between text-xs text-gray-400">
+                                <span>${movie.year}</span>
+                                <span class="px-2 py-0.5 rounded bg-white/5 text-gray-300 font-medium">${escapeHtml(movie.genre)}</span>
+                            </div>
+                        </div>
+                        ${adminCardControls}
+                    </article>
+                `;
+            }).join("");
+        }
+
+        function openAdminAndEdit(movieId) {
+            if (!isAdmin) return;
+            openAdminModal();
+            editMovieInAdmin(movieId);
+        }
+
+        /**
+         * FİLM İZLEME VE UYGULAMA İÇİ VİDEO OYNATICI MODALI
+         */
+        function openWatchModal(movieId) {
+            const movie = movies.find(m => m.id === movieId);
+            if (!movie) return;
+
+            activeWatchMovieId = movieId;
+
+            document.getElementById("watch-title-top").textContent = movie.title;
+            document.getElementById("watch-title").textContent = movie.title;
+            document.getElementById("watch-year").textContent = movie.year;
+            document.getElementById("watch-genre").textContent = movie.genre;
+            document.getElementById("watch-description").textContent = movie.description;
+
+            const playerWrapper = document.getElementById("player-wrapper");
+            playerWrapper.innerHTML = buildInAppVideoPlayer(movie.videoUrl, movie.poster);
+
+            updateWatchModalRatingUI(movie);
+
+            const modal = document.getElementById("watch-modal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeWatchModal() {
+            const modal = document.getElementById("watch-modal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+            document.body.style.overflow = "";
+            document.getElementById("player-wrapper").innerHTML = "";
+            activeWatchMovieId = null;
+        }
+
+        /**
+         * UYGULAMA İÇİ HTML5 VIDEO OYNATICI (YouTube Hata 153 Yönlendirmesini Önler)
+         */
+        function buildInAppVideoPlayer(url, poster) {
+            if (!url) {
+                return `<div class="text-gray-400 text-sm p-6 text-center">Bu film için video kaynağı bulunamadı.</div>`;
+            }
+
+            // Vimeo Embed Kontrolü
+            const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+            if (vimeoMatch && vimeoMatch[1]) {
+                return `
+                    <iframe class="w-full h-full" 
+                        src="https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1" 
+                        frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen>
+                    </iframe>
+                `;
+            }
+
+            // YouTube bağlantısı girilmişse Hata 153 riskine karşı uyarı ve oynatıcı
+            const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            if (ytMatch && ytMatch[1]) {
+                return `
+                    <div class="w-full h-full flex flex-col">
+                        <iframe class="w-full flex-grow" 
+                            src="https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&rel=0" 
+                            title="FilmTR Video Oynatıcı" frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+                        </iframe>
+                    </div>
+                `;
+            }
+
+            // Doğrudan Uygulama İçi HTML5 Video Oynatıcı (MP4, WebM, Blob URL)
+            return `
+                <video id="in-app-html5-player" class="w-full h-full bg-black" controls autoplay playsinline controlsList="nodownload" poster="${escapeHtml(poster)}">
+                    <source src="${escapeHtml(url)}">
+                    Tarayıcınız video oynatmayı desteklemiyor.
+                </video>
+            `;
+        }
+
+        /**
+         * ETKİLEŞİMLİ 1-5 YILDIZ PUANLAMA SİSTEMİ
+         */
+        function getAverageRating(movie) {
+            if (!movie.ratingCount || movie.ratingCount === 0) return "0.0";
+            return (movie.ratingSum / movie.ratingCount).toFixed(1);
+        }
+
+        function updateWatchModalRatingUI(movie) {
+            const avg = getAverageRating(movie);
+            const userPreviousVote = userRatings[movie.id] || 0;
+
+            document.getElementById("watch-avg-rating").textContent = avg;
+            document.getElementById("watch-vote-count").textContent = `Toplam ${movie.ratingCount} oy kullanıldı`;
+
+            const promptText = document.getElementById("rating-prompt-text");
+            const ratedBadge = document.getElementById("user-rated-badge");
+
+            if (userPreviousVote > 0) {
+                promptText.textContent = `Sizin puanınız: ${userPreviousVote} / 5 Yıldız`;
+                ratedBadge.classList.remove("hidden");
+            } else {
+                promptText.textContent = "Bu filme puan verin (1-5 Yıldız):";
+                ratedBadge.classList.add("hidden");
+            }
+
+            const starsContainer = document.getElementById("star-rating-buttons");
+            starsContainer.innerHTML = [1, 2, 3, 4, 5].map(star => {
+                const isSelected = star <= userPreviousVote;
+                return `
+                    <button type="button" onclick="rateMovie('${movie.id}', ${star})" 
+                        onmouseenter="highlightStars(${star})" onmouseleave="resetStarHighlight(${userPreviousVote})"
+                        data-star="${star}"
+                        class="star-btn flex-1 py-2 rounded-xl border transition-all flex flex-col items-center justify-center gap-0.5 ${
+                            isSelected 
+                            ? 'bg-cinema-gold/15 border-cinema-gold text-cinema-gold' 
+                            : 'bg-cinema-card border-cinema-border text-gray-400 hover:border-cinema-gold/60'
+                        }">
+                        <i class="fa-solid fa-star text-base"></i>
+                        <span class="text-[10px] font-bold">${star}</span>
+                    </button>
+                `;
+            }).join("");
+        }
+
+        function highlightStars(hoverValue) {
+            document.querySelectorAll(".star-btn").forEach(btn => {
+                const val = parseInt(btn.getAttribute("data-star"), 10);
+                if (val <= hoverValue) {
+                    btn.classList.add("text-cinema-gold", "border-cinema-gold");
+                    btn.classList.remove("text-gray-400");
+                } else {
+                    btn.classList.remove("text-cinema-gold", "border-cinema-gold");
+                    btn.classList.add("text-gray-400");
+                }
+            });
+        }
+
+        function resetStarHighlight(savedValue) {
+            document.querySelectorAll(".star-btn").forEach(btn => {
+                const val = parseInt(btn.getAttribute("data-star"), 10);
+                if (val <= savedValue) {
+                    btn.classList.add("text-cinema-gold", "border-cinema-gold");
+                    btn.classList.remove("text-gray-400");
+                } else {
+                    btn.classList.remove("text-cinema-gold", "border-cinema-gold");
+                    btn.classList.add("text-gray-400");
+                }
+            });
+        }
+
+        function rateMovie(movieId, stars) {
+            const movie = movies.find(m => m.id === movieId);
+            if (!movie) return;
+
+            const previousVote = userRatings[movieId];
+
+            if (previousVote) {
+                movie.ratingSum = movie.ratingSum - previousVote + stars;
+                showToast(`Puanınız ${stars} yıldız olarak güncellendi!`, "success");
+            } else {
+                movie.ratingSum = (movie.ratingSum || 0) + stars;
+                movie.ratingCount = (movie.ratingCount || 0) + 1;
+                showToast(`Teşekkürler! Filme ${stars} yıldız verdiniz.`, "success");
+            }
+
+            userRatings[movieId] = stars;
+            saveMoviesToStorage();
+            saveUserRatingsToStorage();
+
+            updateWatchModalRatingUI(movie);
+            renderMovies();
+            renderHeroBanner();
+        }
+
+        /**
+         * YÖNETİCİ PANELİ İŞLEMLERİ (SADECE ADMIN YETKİSİYLE)
+         */
+        function openAdminModal() {
+            if (!isAdmin) {
+                showToast("Bu alana yalnızca yönetici erişebilir!", "error");
+                return;
+            }
+            resetAdminForm();
+            renderAdminMovieList();
+            const modal = document.getElementById("admin-modal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeAdminModal() {
+            const modal = document.getElementById("admin-modal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+            document.body.style.overflow = "";
+        }
+
+        function handlePosterFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith("image/")) {
+                showToast("Lütfen geçerli bir görsel dosyası seçin.", "error");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                tempUploadedPosterBase64 = e.target.result;
+                document.getElementById("movie-poster-url").value = "";
+                const thumb = document.getElementById("poster-preview-thumb");
+                thumb.src = tempUploadedPosterBase64;
+                thumb.classList.remove("hidden");
+                showToast("Afiş görseli yüklendi.", "info");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function previewPosterUrl(url) {
+            tempUploadedPosterBase64 = "";
+            const thumb = document.getElementById("poster-preview-thumb");
+            if (url.trim()) {
+                thumb.src = url.trim();
+                thumb.classList.remove("hidden");
+            } else {
+                thumb.classList.add("hidden");
+            }
+        }
+
+        function handleVideoFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (tempUploadedVideoBlobUrl) {
+                URL.revokeObjectURL(tempUploadedVideoBlobUrl);
+            }
+            tempUploadedVideoBlobUrl = URL.createObjectURL(file);
+            document.getElementById("movie-video-url").value = "";
+            document.getElementById("selected-video-name").textContent = file.name;
+            showToast(`"${file.name}" video dosyası seçildi.`, "info");
+        }
+
+        function handleSaveMovie(e) {
+            e.preventDefault();
+            if (!isAdmin) return;
+
+            const editId = document.getElementById("edit-movie-id").value;
+            const title = document.getElementById("movie-title").value.trim();
+            const genre = document.getElementById("movie-genre").value;
+            const year = parseInt(document.getElementById("movie-year").value, 10);
+            const description = document.getElementById("movie-description").value.trim();
+            const posterUrlInput = document.getElementById("movie-poster-url").value.trim();
+            const videoUrlInput = document.getElementById("movie-video-url").value.trim();
+            const isFeatured = document.getElementById("movie-featured").checked;
+
+            if (!title || !description || !year) {
+                showToast("Lütfen film adı, yıl ve açıklamayı doldurun.", "error");
+                return;
+            }
+
+            const finalPoster = tempUploadedPosterBase64 || posterUrlInput;
+            const finalVideo = tempUploadedVideoBlobUrl || videoUrlInput;
+
+            if (!finalPoster) {
+                showToast("Lütfen bir afiş görseli URL'si girin veya cihazınızdan seçin.", "error");
+                return;
+            }
+            if (!finalVideo) {
+                showToast("Lütfen bir video bağlantısı girin veya video dosyası seçin.", "error");
+                return;
+            }
+
+            if (isFeatured) {
+                movies.forEach(m => m.featured = false);
+            }
+
+            if (editId) {
+                const index = movies.findIndex(m => m.id === editId);
+                if (index !== -1) {
+                    movies[index] = {
+                        ...movies[index],
+                        title,
+                        genre,
+                        year,
+                        description,
+                        poster: finalPoster,
+                        videoUrl: finalVideo,
+                        featured: isFeatured
+                    };
+                    showToast(`"${title}" başarıyla güncellendi!`, "success");
+                }
+            } else {
+                const newMovie = {
+                    id: "mov-" + Date.now(),
+                    title,
+                    genre,
+                    year,
+                    description,
+                    poster: finalPoster,
+                    videoUrl: finalVideo,
+                    ratingSum: 5,
+                    ratingCount: 1,
+                    featured: isFeatured,
+                    createdAt: Math.floor(Date.now() / 1000)
+                };
+                movies.unshift(newMovie);
+                showToast(`"${title}" yayına alındı!`, "success");
+            }
+
+            saveMoviesToStorage();
+            resetAdminForm();
+            renderAdminMovieList();
+            renderHeroBanner();
+            renderMovies();
+        }
+
+        function editMovieInAdmin(movieId) {
+            if (!isAdmin) return;
+            const movie = movies.find(m => m.id === movieId);
+            if (!movie) return;
+
+            tempUploadedPosterBase64 = "";
+            tempUploadedVideoBlobUrl = "";
+
+            document.getElementById("edit-movie-id").value = movie.id;
+            document.getElementById("movie-title").value = movie.title;
+            document.getElementById("movie-genre").value = movie.genre;
+            document.getElementById("movie-year").value = movie.year;
+            document.getElementById("movie-description").value = movie.description;
+            document.getElementById("movie-poster-url").value = movie.poster;
+            document.getElementById("movie-video-url").value = movie.videoUrl;
+            document.getElementById("movie-featured").checked = !!movie.featured;
+
+            const thumb = document.getElementById("poster-preview-thumb");
+            thumb.src = movie.poster;
+            thumb.classList.remove("hidden");
+            document.getElementById("selected-video-name").textContent = "";
+
+            document.getElementById("form-mode-title").innerHTML = `<i class="fa-solid fa-pen-to-square text-cinema-gold"></i> Filmi Düzenle`;
+            document.getElementById("save-movie-btn").innerHTML = `<i class="fa-solid fa-floppy-disk mr-1.5"></i> Değişiklikleri Kaydet`;
+            document.getElementById("cancel-edit-btn").classList.remove("hidden");
+        }
+
+        function resetAdminForm() {
+            document.getElementById("movie-form").reset();
+            document.getElementById("edit-movie-id").value = "";
+            document.getElementById("movie-year").value = new Date().getFullYear();
+            tempUploadedPosterBase64 = "";
+            tempUploadedVideoBlobUrl = "";
+            document.getElementById("poster-preview-thumb").classList.add("hidden");
+            document.getElementById("selected-video-name").textContent = "";
+
+            document.getElementById("form-mode-title").innerHTML = `<i class="fa-solid fa-plus-circle text-cinema-red"></i> Yeni Film Ekle`;
+            document.getElementById("save-movie-btn").innerHTML = `<i class="fa-solid fa-check mr-1.5"></i> Filmi Yayınla`;
+            document.getElementById("cancel-edit-btn").classList.add("hidden");
+        }
+
+        function renderAdminMovieList() {
+            const listContainer = document.getElementById("admin-movie-list");
+            document.getElementById("admin-total-count").textContent = movies.length;
+
+            if (movies.length === 0) {
+                listContainer.innerHTML = `<p class="text-sm text-gray-400 text-center py-8">Henüz yayında film bulunmuyor.</p>`;
+                return;
+            }
+
+            listContainer.innerHTML = movies.map(movie => {
+                const avg = getAverageRating(movie);
+                return `
+                    <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-cinema-card border border-cinema-border hover:border-white/15 transition-colors">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <img src="${escapeHtml(movie.poster)}" alt="${escapeHtml(movie.title)}" 
+                                onerror="this.src='https://placehold.co/80x120/141821/e50914?text=Film'"
+                                class="w-11 h-16 object-cover rounded-lg shrink-0 border border-cinema-border">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <h5 class="font-bold text-sm text-white truncate">${escapeHtml(movie.title)}</h5>
+                                    ${movie.featured ? '<span class="px-1.5 py-0.5 text-[10px] font-bold bg-cinema-red/20 text-cinema-red rounded">Vitrin</span>' : ''}
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-gray-400 mt-1">
+                                    <span>${movie.year}</span>
+                                    <span>•</span>
+                                    <span>${escapeHtml(movie.genre)}</span>
+                                    <span>•</span>
+                                    <span class="text-cinema-gold font-semibold"><i class="fa-solid fa-star text-[10px]"></i> ${avg} (${movie.ratingCount})</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <button type="button" onclick="editMovieInAdmin('${movie.id}')" title="Düzenle"
+                                class="w-8 h-8 rounded-lg bg-white/5 hover:bg-amber-500/20 text-gray-300 hover:text-amber-400 flex items-center justify-center transition-colors">
+                                <i class="fa-solid fa-pen text-xs"></i>
+                            </button>
+                            <button type="button" onclick="confirmDeleteMovie('${movie.id}')" title="Sil"
+                                class="w-8 h-8 rounded-lg bg-white/5 hover:bg-red-500/20 text-gray-300 hover:text-red-400 flex items-center justify-center transition-colors">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        function confirmDeleteMovie(movieId) {
+            if (!isAdmin) return;
+            const movie = movies.find(m => m.id === movieId);
+            if (!movie) return;
+
+            openConfirmDialog(
+                "Filmi Sil",
+                `"${movie.title}" filmini kalıcı olarak silmek istediğinize emin misiniz?`,
+                () => {
+                    movies = movies.filter(m => m.id !== movieId);
+                    saveMoviesToStorage();
+                    renderAdminMovieList();
+                    renderHeroBanner();
+                    renderMovies();
+                    showToast("Film silindi.", "info");
+                }
+            );
+        }
+
+        function confirmResetDefaults() {
+            if (!isAdmin) return;
+            openConfirmDialog(
+                "Varsayılanlara Sıfırla",
+                "Tüm eklenen filmler silinecek ve başlangıçtaki örnek Türkçe dublaj filmler geri yüklenecektir. Onaylıyor musunuz?",
+                () => {
+                    movies = JSON.parse(JSON.stringify(DEFAULT_MOVIES));
+                    userRatings = {};
+                    saveMoviesToStorage();
+                    saveUserRatingsToStorage();
+                    resetAdminForm();
+                    renderAdminMovieList();
+                    renderHeroBanner();
+                    renderMovies();
+                    showToast("Varsayılan film arşivi geri yüklendi.", "success");
+                }
+            );
+        }
+
+        /**
+         * ÖZEL ONAY PENCERESİ
+         */
+        let pendingConfirmCallback = null;
+
+        function openConfirmDialog(title, message, onConfirm) {
+            document.getElementById("confirm-title").textContent = title;
+            document.getElementById("confirm-message").textContent = message;
+            pendingConfirmCallback = onConfirm;
+
+            const dialog = document.getElementById("confirm-dialog");
+            dialog.classList.remove("hidden");
+            dialog.classList.add("flex");
+
+            document.getElementById("confirm-action-btn").onclick = () => {
+                closeConfirmDialog();
+                if (pendingConfirmCallback) pendingConfirmCallback();
+            };
+        }
+
+        function closeConfirmDialog() {
+            const dialog = document.getElementById("confirm-dialog");
+            dialog.classList.add("hidden");
+            dialog.classList.remove("flex");
+            pendingConfirmCallback = null;
+        }
+
+        /**
+         * BİLDİRİM MESAJLARI (TOAST) & YARDIMCI FONKSİYONLAR
+         */
+        function showToast(message, type = "info") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+
+            const styles = {
+                success: "bg-emerald-600/95 border-emerald-400/30 text-white",
+                error: "bg-red-600/95 border-red-400/30 text-white",
+                info: "bg-cinema-card/95 border-cinema-border text-gray-100"
+            };
+
+            const icons = {
+                success: "fa-circle-check",
+                error: "fa-circle-exclamation",
+                info: "fa-circle-info"
+            };
+
+            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-2xl backdrop-blur-md text-xs sm:text-sm font-medium transition-all duration-300 transform translate-y-2 opacity-0 ${styles[type] || styles.info}`;
+            toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span>${escapeHtml(message)}</span>`;
+
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove("translate-y-2", "opacity-0");
+            });
+
+            setTimeout(() => {
+                toast.classList.add("translate-y-2", "opacity-0");
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                closeWatchModal();
+                closeLoginModal();
+                closeAdminModal();
+                closeConfirmDialog();
+            }
+        });
+    </script>
+</body>
+</html>

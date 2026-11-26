@@ -68,6 +68,10 @@
             opacity: 1;
         }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#e50914">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
 </head>
 <body class="min-h-screen flex flex-col selection:bg-cinema-red selection:text-white">
 
@@ -1413,6 +1417,11 @@
                 closeConfirmDialog();
             }
         });
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+        }
     </script>
 </body>
 </html>

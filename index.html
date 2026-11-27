@@ -152,8 +152,8 @@
                 <div class="w-16 h-16 rounded-2xl bg-cinema-card border border-cinema-border flex items-center justify-center mb-4 text-gray-500 text-2xl">
                     <i class="fa-solid fa-film"></i>
                 </div>
-                <h3 class="text-lg font-bold text-white mb-1">Aradığınız kriterlere uygun film bulunamadı</h3>
-                <p class="text-sm text-gray-400 max-w-md mb-5">Farklı bir arama kelimesi deneyebilir veya tür filtrelerini sıfırlayabilirsiniz.</p>
+                <h3 id="empty-title" class="text-lg font-bold text-white mb-1">Aradığınız kriterlere uygun film bulunamadı</h3>
+                <p id="empty-desc" class="text-sm text-gray-400 max-w-md mb-5">Farklı bir arama kelimesi deneyebilir veya tür filtrelerini sıfırlayabilirsiniz.</p>
                 <button onclick="resetFilters()" class="px-5 py-2.5 bg-cinema-red hover:bg-cinema-redHover text-white text-sm font-semibold rounded-xl transition-colors">
                     Tüm Filmleri Göster
                 </button>
@@ -234,6 +234,29 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Yorumlar -->
+            <div class="px-5 sm:px-6 pb-6 pt-5 border-t border-cinema-border">
+                <h4 class="font-bold text-white text-base mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-comments text-cinema-red"></i>
+                    Yorumlar (<span id="comment-count">0</span>)
+                </h4>
+                <div class="space-y-2.5 mb-5">
+                    <input type="text" id="comment-name" maxlength="30" placeholder="Adınız (boş bırakırsan Misafir)" autocomplete="off"
+                        class="w-full bg-cinema-bg border border-cinema-border text-sm text-white placeholder-gray-500 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-cinema-red focus:ring-1 focus:ring-cinema-red">
+                    <textarea id="comment-text" rows="3" maxlength="500" placeholder="Bu film hakkında ne düşünüyorsun?"
+                        oninput="document.getElementById('comment-chars').textContent = this.value.length + ' / 500'"
+                        class="w-full bg-cinema-bg border border-cinema-border text-sm text-white placeholder-gray-500 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-cinema-red focus:ring-1 focus:ring-cinema-red resize-none"></textarea>
+                    <div class="flex items-center justify-between gap-3">
+                        <span id="comment-chars" class="text-[11px] text-gray-500">0 / 500</span>
+                        <button type="button" id="comment-send-btn" onclick="submitComment()"
+                            class="px-5 py-2.5 rounded-xl bg-cinema-red hover:bg-cinema-redHover text-white text-sm font-semibold transition-colors flex items-center gap-2">
+                            <i class="fa-solid fa-paper-plane text-xs"></i> Yorumu Gönder
+                        </button>
+                    </div>
+                </div>
+                <div id="comment-list" class="space-y-3 max-h-[420px] overflow-y-auto pr-1"></div>
+            </div>
         </div>
     </div>
 
@@ -256,8 +279,8 @@
 
             <form id="admin-login-form" onsubmit="handleAdminLogin(event)" autocomplete="off" class="p-6 space-y-4">
                 <div>
-                    <label for="admin-username" class="block text-xs font-semibold text-gray-300 mb-1.5">Kullanıcı Adı</label>
-                    <input type="text" id="admin-username" name="admin_user_field" required autocomplete="off"
+                    <label for="admin-username" class="block text-xs font-semibold text-gray-300 mb-1.5">E-posta</label>
+                    <input type="email" id="admin-username" name="admin_user_field" required autocomplete="off" autocapitalize="none" spellcheck="false"
                         class="w-full bg-cinema-bg border border-cinema-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cinema-red">
                 </div>
 
@@ -268,7 +291,7 @@
                 </div>
 
                 <div id="login-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
-                    Hatalı kullanıcı adı veya şifre! Lütfen tekrar deneyin.
+                    Hatalı e-posta veya şifre! Lütfen tekrar deneyin.
                 </div>
 
                 <button type="button" onclick="handleAdminLogin(event)" class="w-full py-3 bg-cinema-red hover:bg-cinema-redHover text-white font-bold text-sm rounded-xl shadow-lg shadow-cinema-red/25 transition-all">
@@ -295,8 +318,11 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2.5">
-                    <button type="button" onclick="confirmResetDefaults()" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors">
-                        <i class="fa-solid fa-rotate-left mr-1.5"></i>Varsayılan Filmlere Sıfırla
+                    <button type="button" onclick="importLocalMovies()" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors">
+                        <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i>Telefondaki Filmleri Aktar
+                    </button>
+                    <button type="button" onclick="importSampleMovies()" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-white/5 text-gray-300 hover:bg-white/10 border border-cinema-border transition-colors">
+                        <i class="fa-solid fa-film mr-1.5"></i>Örnek Filmleri Yükle
                     </button>
                     <button onclick="closeAdminModal()" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-cinema-red text-gray-300 hover:text-white flex items-center justify-center transition-colors">
                         <i class="fa-solid fa-xmark text-lg"></i>
@@ -444,15 +470,13 @@
         /**
          * YÖNETİCİ KİMLİK BİLGİLERİ
          */
-        const ADMIN_CREDENTIALS = {
-            username: "nagiyev",
-            password: "2009"
-        };
+        const ADMIN_UID = "98ssfzVZl1XEkwedyXof1SOXsCU2";
 
         const STORAGE_KEYS = {
             MOVIES: "filmtr_movies_v2",
             USER_RATINGS: "filmtr_user_ratings_v2",
-            ADMIN_SESSION: "filmtr_admin_logged_in_v2"
+            ADMIN_SESSION: "filmtr_admin_logged_in_v2",
+            COMMENTER_NAME: "filmtr_commenter_name_v1"
         };
 
         const GENRES = ["Tümü", "Aksiyon", "Bilim Kurgu", "Dram", "Gerilim", "Komedi", "Korku", "Animasyon"];
@@ -544,6 +568,13 @@
 
         // Uygulama Durumu (State)
         let movies = [];
+        let moviesLoaded = false;
+        let firebaseError = false;
+        let domReady = false;
+        let currentUid = null;
+        let commentsUnsub = null;
+        let commentsData = [];
+        let lastCommentAt = 0;
         let userRatings = {};
         let isAdmin = false;
         let selectedGenre = "Tümü";
@@ -557,6 +588,7 @@
          */
         window.addEventListener("DOMContentLoaded", () => {
             loadStateFromStorage();
+            domReady = true;
             renderAuthControls();
             renderGenreFilters();
             renderHeroBanner();
@@ -568,6 +600,14 @@
                 document.getElementById("clear-search-btn").classList.toggle("hidden", searchQuery.length === 0);
                 renderMovies();
             });
+
+            // Veritabanına 12 sn içinde ulaşılamazsa hata göster
+            setTimeout(() => {
+                if (!moviesLoaded) {
+                    firebaseError = true;
+                    renderMovies();
+                }
+            }, 12000);
         });
 
         /**
@@ -575,30 +615,50 @@
          */
         function loadStateFromStorage() {
             try {
-                const storedMovies = localStorage.getItem(STORAGE_KEYS.MOVIES);
-                if (storedMovies) {
-                    movies = JSON.parse(storedMovies);
-                } else {
-                    movies = JSON.parse(JSON.stringify(DEFAULT_MOVIES));
-                    saveMoviesToStorage();
-                }
-
                 const storedRatings = localStorage.getItem(STORAGE_KEYS.USER_RATINGS);
                 userRatings = storedRatings ? JSON.parse(storedRatings) : {};
-
-                isAdmin = sessionStorage.getItem(STORAGE_KEYS.ADMIN_SESSION) === "true";
             } catch (err) {
                 console.error("Depolama okuma hatası:", err);
-                movies = JSON.parse(JSON.stringify(DEFAULT_MOVIES));
+                userRatings = {};
+            }
+            isAdmin = false;
+        }
+
+        /**
+         * FIREBASE'DEN GELEN CANLI VERİLER (modül betiği bu fonksiyonları çağırır)
+         */
+        function onMoviesSnapshot(list) {
+            movies = list;
+            moviesLoaded = true;
+            firebaseError = false;
+            if (!domReady) return;
+            renderHeroBanner();
+            renderMovies();
+            if (!document.getElementById("admin-modal").classList.contains("hidden")) renderAdminMovieList();
+            if (activeWatchMovieId) {
+                const m = movies.find(x => x.id === activeWatchMovieId);
+                if (m) updateWatchModalRatingUI(m);
             }
         }
 
-        function saveMoviesToStorage() {
-            try {
-                localStorage.setItem(STORAGE_KEYS.MOVIES, JSON.stringify(movies));
-            } catch (err) {
-                showToast("Tarayıcı depolama alanı doldu! Çok büyük görsel yüklememeye çalışın.", "error");
+        function onFirebaseError(err) {
+            console.error("Firebase hatası:", err);
+            if (!moviesLoaded) {
+                firebaseError = true;
+                if (domReady) renderMovies();
             }
+        }
+
+        function onAuthChanged(user) {
+            currentUid = user ? user.uid : null;
+            const wasAdmin = isAdmin;
+            isAdmin = !!user && !user.isAnonymous && user.uid === ADMIN_UID;
+            if (!domReady) return;
+            if (wasAdmin !== isAdmin) {
+                renderAuthControls();
+                renderMovies();
+            }
+            if (activeWatchMovieId) renderComments();
         }
 
         function saveUserRatingsToStorage() {
@@ -656,30 +716,42 @@
             modal.classList.remove("flex");
         }
 
-        function handleAdminLogin(e) {
+        async function handleAdminLogin(e) {
             e.preventDefault();
-            const username = document.getElementById("admin-username").value.trim();
-            const password = document.getElementById("admin-password").value.trim();
+            const email = document.getElementById("admin-username").value.trim();
+            const password = document.getElementById("admin-password").value;
+            const errorBox = document.getElementById("login-error");
+            errorBox.classList.add("hidden");
 
-            if (username.toLowerCase() === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+            if (!window.FB) {
+                showToast("Bağlantı kurulamadı. İnternetini kontrol edip sayfayı yenile.", "error");
+                return;
+            }
+
+            try {
+                const cred = await FB.signIn(email, password);
+                if (cred.user.uid !== ADMIN_UID) {
+                    await FB.signOut();
+                    errorBox.classList.remove("hidden");
+                    return;
+                }
                 isAdmin = true;
-                try { sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, "true"); } catch (err) {}
                 closeLoginModal();
                 renderAuthControls();
                 renderMovies();
-                showToast("Yönetici girişi başarılı! Film ekleme ve yönetme yetkisi açıldı.", "success");
-            } else {
-                document.getElementById("login-error").classList.remove("hidden");
+                showToast("Yönetici girişi başarılı!", "success");
+            } catch (err) {
+                errorBox.classList.remove("hidden");
                 document.getElementById("admin-password").value = "";
             }
         }
 
-        function handleAdminLogout() {
+        async function handleAdminLogout() {
             isAdmin = false;
-            try { sessionStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION); } catch (err) {}
             closeAdminModal();
             renderAuthControls();
             renderMovies();
+            try { if (window.FB) await FB.signOut(); } catch (err) {}
             showToast("Yönetici oturumu kapatıldı.", "info");
         }
 
@@ -803,6 +875,18 @@
             const countBadge = document.getElementById("movie-count-badge");
             const sortBy = document.getElementById("sort-select").value;
 
+            if (!moviesLoaded) {
+                emptyState.classList.add("hidden");
+                emptyState.classList.remove("flex");
+                countBadge.textContent = firebaseError ? "Bağlanılamadı" : "Yükleniyor...";
+                grid.innerHTML = `<p class="col-span-full text-center text-gray-400 text-sm py-16">${
+                    firebaseError
+                        ? "Filmler yüklenemedi. İnternet bağlantını kontrol edip sayfayı yenile."
+                        : "Filmler yükleniyor..."
+                }</p>`;
+                return;
+            }
+
             let filtered = movies.filter(movie => {
                 const matchesGenre = selectedGenre === "Tümü" || movie.genre === selectedGenre;
                 const matchesSearch = !searchQuery || 
@@ -823,6 +907,13 @@
             countBadge.textContent = `${filtered.length} Film Listeleniyor`;
 
             if (filtered.length === 0) {
+                const dbEmpty = movies.length === 0;
+                document.getElementById("empty-title").textContent = dbEmpty
+                    ? (isAdmin ? "Veritabanı henüz boş" : "Henüz film eklenmemiş")
+                    : "Aradığınız kriterlere uygun film bulunamadı";
+                document.getElementById("empty-desc").textContent = dbEmpty
+                    ? (isAdmin ? "Yönetici Paneli'nden \"Telefondaki Filmleri Aktar\" veya \"Örnek Filmleri Yükle\" düğmesine bas." : "Çok yakında yeni filmler eklenecek.")
+                    : "Farklı bir arama kelimesi deneyebilir veya tür filtrelerini sıfırlayabilirsiniz.";
                 grid.innerHTML = "";
                 emptyState.classList.remove("hidden");
                 emptyState.classList.add("flex");
@@ -916,11 +1007,143 @@
             playerWrapper.innerHTML = buildInAppVideoPlayer(movie.videoUrl, movie.poster);
 
             updateWatchModalRatingUI(movie);
+            initCommentsUI(movieId);
 
             const modal = document.getElementById("watch-modal");
+            modal.scrollTop = 0;
             modal.classList.remove("hidden");
             modal.classList.add("flex");
             document.body.style.overflow = "hidden";
+        }
+
+        /**
+         * YORUMLAR (HERKESE AÇIK, CANLI)
+         */
+        function initCommentsUI(movieId) {
+            let savedName = "";
+            try { savedName = localStorage.getItem(STORAGE_KEYS.COMMENTER_NAME) || ""; } catch (err) {}
+            document.getElementById("comment-name").value = savedName;
+            document.getElementById("comment-text").value = "";
+            document.getElementById("comment-chars").textContent = "0 / 500";
+
+            stopCommentsListener();
+            commentsData = [];
+            if (!window.FB) {
+                renderComments("error");
+                return;
+            }
+            renderComments("loading");
+            commentsUnsub = FB.watchComments(
+                movieId,
+                list => {
+                    if (activeWatchMovieId !== movieId) return;
+                    commentsData = list;
+                    renderComments();
+                },
+                err => {
+                    console.error(err);
+                    if (activeWatchMovieId === movieId) renderComments("error");
+                }
+            );
+        }
+
+        function stopCommentsListener() {
+            if (commentsUnsub) {
+                try { commentsUnsub(); } catch (err) {}
+                commentsUnsub = null;
+            }
+        }
+
+        function renderComments(state) {
+            const list = document.getElementById("comment-list");
+            document.getElementById("comment-count").textContent = commentsData.length;
+
+            if (state === "loading") {
+                list.innerHTML = `<p class="text-sm text-gray-500 text-center py-4">Yorumlar yükleniyor...</p>`;
+                return;
+            }
+            if (state === "error") {
+                list.innerHTML = `<p class="text-sm text-red-400 text-center py-4">Yorumlar yüklenemedi. İnternetini kontrol edip tekrar dene.</p>`;
+                return;
+            }
+            if (commentsData.length === 0) {
+                list.innerHTML = `<p class="text-sm text-gray-500 text-center py-4">Henüz yorum yok. İlk yorumu sen yaz!</p>`;
+                return;
+            }
+
+            list.innerHTML = commentsData.map(c => {
+                const ms = c.createdAt && c.createdAt.toMillis ? c.createdAt.toMillis() : Date.now();
+                const date = new Date(ms).toLocaleString("tr-TR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+                const canDelete = isAdmin || (currentUid && c.uid === currentUid);
+                const name = c.name || "Misafir";
+                const initial = escapeHtml(name.trim().charAt(0).toUpperCase() || "M");
+                return `
+                    <div class="bg-cinema-bg border border-cinema-border rounded-xl p-3.5">
+                        <div class="flex items-center justify-between gap-2 mb-1.5">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="w-7 h-7 rounded-full bg-cinema-red/20 text-cinema-red text-xs font-bold flex items-center justify-center shrink-0">${initial}</span>
+                                <span class="text-sm font-semibold text-white truncate">${escapeHtml(name)}</span>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span class="text-[11px] text-gray-500">${date}</span>
+                                ${canDelete ? `<button type="button" onclick="confirmDeleteComment('${escapeHtml(c.id)}')" title="Yorumu sil" class="text-gray-500 hover:text-red-400 transition-colors"><i class="fa-solid fa-trash text-xs"></i></button>` : ""}
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-300 leading-relaxed whitespace-pre-line break-words">${escapeHtml(c.text)}</p>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        async function submitComment() {
+            if (!activeWatchMovieId) return;
+            const movieId = activeWatchMovieId;
+            const nameEl = document.getElementById("comment-name");
+            const textEl = document.getElementById("comment-text");
+            const name = nameEl.value.trim().slice(0, 30) || "Misafir";
+            const text = textEl.value.trim().slice(0, 500);
+
+            if (text.length < 2) {
+                showToast("Lütfen bir yorum yaz.", "error");
+                return;
+            }
+            if (Date.now() - lastCommentAt < 8000) {
+                showToast("Biraz yavaş! Birkaç saniye sonra tekrar yorum yazabilirsin.", "info");
+                return;
+            }
+            if (!window.FB || !currentUid) {
+                showToast("Bağlantı henüz hazır değil, birkaç saniye sonra tekrar dene.", "error");
+                return;
+            }
+
+            const btn = document.getElementById("comment-send-btn");
+            btn.disabled = true;
+            try {
+                await FB.addComment(movieId, name, text);
+                lastCommentAt = Date.now();
+                try { localStorage.setItem(STORAGE_KEYS.COMMENTER_NAME, name === "Misafir" ? "" : name); } catch (err) {}
+                textEl.value = "";
+                document.getElementById("comment-chars").textContent = "0 / 500";
+                showToast("Yorumun eklendi.", "success");
+            } catch (err) {
+                console.error(err);
+                showToast("Yorum gönderilemedi. Biraz sonra tekrar dene.", "error");
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function confirmDeleteComment(commentId) {
+            const movieId = activeWatchMovieId;
+            openConfirmDialog("Yorumu Sil", "Bu yorum silinsin mi?", async () => {
+                try {
+                    await FB.deleteComment(movieId, commentId);
+                    showToast("Yorum silindi.", "success");
+                } catch (err) {
+                    console.error(err);
+                    showToast("Yorum silinemedi.", "error");
+                }
+            });
         }
 
         function closeWatchModal() {
@@ -929,6 +1152,7 @@
             modal.classList.remove("flex");
             document.body.style.overflow = "";
             document.getElementById("player-wrapper").innerHTML = "";
+            stopCommentsListener();
             activeWatchMovieId = null;
         }
 
@@ -1045,28 +1269,32 @@
             });
         }
 
-        function rateMovie(movieId, stars) {
+        async function rateMovie(movieId, stars) {
             const movie = movies.find(m => m.id === movieId);
             if (!movie) return;
-
-            const previousVote = userRatings[movieId];
-
-            if (previousVote) {
-                movie.ratingSum = movie.ratingSum - previousVote + stars;
-                showToast(`Puanınız ${stars} yıldız olarak güncellendi!`, "success");
-            } else {
-                movie.ratingSum = (movie.ratingSum || 0) + stars;
-                movie.ratingCount = (movie.ratingCount || 0) + 1;
-                showToast(`Teşekkürler! Filme ${stars} yıldız verdiniz.`, "success");
+            if (!window.FB) {
+                showToast("Bağlantı kurulamadı, daha sonra tekrar dene.", "error");
+                return;
             }
 
-            userRatings[movieId] = stars;
-            saveMoviesToStorage();
-            saveUserRatingsToStorage();
+            const previousVote = userRatings[movieId];
+            if (previousVote === stars) {
+                showToast("Bu puanı zaten verdin.", "info");
+                return;
+            }
+            const delta = previousVote ? stars - previousVote : stars;
 
-            updateWatchModalRatingUI(movie);
-            renderMovies();
-            renderHeroBanner();
+            try {
+                await FB.rate(movieId, delta, !previousVote);
+                userRatings[movieId] = stars;
+                saveUserRatingsToStorage();
+                showToast(previousVote ? `Puanın ${stars} yıldız olarak güncellendi!` : `Teşekkürler! Filme ${stars} yıldız verdin.`, "success");
+                const fresh = movies.find(m => m.id === movieId) || movie;
+                updateWatchModalRatingUI(fresh);
+            } catch (err) {
+                console.error(err);
+                showToast("Puan kaydedilemedi. Biraz sonra tekrar dene.", "error");
+            }
         }
 
         /**
@@ -1137,7 +1365,7 @@
             showToast(`"${file.name}" video dosyası seçildi.`, "info");
         }
 
-        function handleSaveMovie(e) {
+        async function handleSaveMovie(e) {
             e.preventDefault();
             if (!isAdmin) return;
 
@@ -1163,52 +1391,54 @@
                 return;
             }
             if (!finalVideo) {
-                showToast("Lütfen bir video bağlantısı girin veya video dosyası seçin.", "error");
+                showToast("Lütfen bir video bağlantısı girin.", "error");
+                return;
+            }
+            if (finalVideo.startsWith("blob:")) {
+                showToast("Telefondan seçilen video başkalarında açılmaz. Videonun internet bağlantısını (https://...) yapıştır.", "error");
+                return;
+            }
+            if (finalPoster.length > 700000) {
+                showToast("Afiş görseli çok büyük. Daha küçük bir görsel seç veya görsel bağlantısı kullan.", "error");
+                return;
+            }
+            if (!window.FB) {
+                showToast("Veritabanı bağlantısı yok. Sayfayı yenile.", "error");
                 return;
             }
 
-            if (isFeatured) {
-                movies.forEach(m => m.featured = false);
-            }
-
-            if (editId) {
-                const index = movies.findIndex(m => m.id === editId);
-                if (index !== -1) {
-                    movies[index] = {
-                        ...movies[index],
-                        title,
-                        genre,
-                        year,
-                        description,
+            const saveBtn = document.getElementById("save-movie-btn");
+            saveBtn.disabled = true;
+            try {
+                const unfeatureIds = isFeatured ? movies.filter(m => m.featured && m.id !== editId).map(m => m.id) : [];
+                let movieData;
+                if (editId) {
+                    const old = movies.find(m => m.id === editId);
+                    if (!old) throw new Error("Film bulunamadı");
+                    movieData = { ...old, title, genre, year, description, poster: finalPoster, videoUrl: finalVideo, featured: isFeatured };
+                } else {
+                    movieData = {
+                        id: "mov-" + Date.now(),
+                        title, genre, year, description,
                         poster: finalPoster,
                         videoUrl: finalVideo,
-                        featured: isFeatured
+                        ratingSum: 5,
+                        ratingCount: 1,
+                        featured: isFeatured,
+                        createdAt: Math.floor(Date.now() / 1000)
                     };
-                    showToast(`"${title}" başarıyla güncellendi!`, "success");
                 }
-            } else {
-                const newMovie = {
-                    id: "mov-" + Date.now(),
-                    title,
-                    genre,
-                    year,
-                    description,
-                    poster: finalPoster,
-                    videoUrl: finalVideo,
-                    ratingSum: 5,
-                    ratingCount: 1,
-                    featured: isFeatured,
-                    createdAt: Math.floor(Date.now() / 1000)
-                };
-                movies.unshift(newMovie);
-                showToast(`"${title}" yayına alındı!`, "success");
+                await FB.saveMovie(movieData, unfeatureIds);
+                showToast(editId ? `"${title}" başarıyla güncellendi!` : `"${title}" yayına alındı!`, "success");
+                resetAdminForm();
+            } catch (err) {
+                console.error(err);
+                showToast(err && err.code === "permission-denied"
+                    ? "Yetkin yok. Yönetici olarak giriş yaptığından emin ol."
+                    : "Film kaydedilemedi. Bağlantını kontrol et.", "error");
+            } finally {
+                saveBtn.disabled = false;
             }
-
-            saveMoviesToStorage();
-            resetAdminForm();
-            renderAdminMovieList();
-            renderHeroBanner();
-            renderMovies();
         }
 
         function editMovieInAdmin(movieId) {
@@ -1306,35 +1536,50 @@
 
             openConfirmDialog(
                 "Filmi Sil",
-                `"${movie.title}" filmini kalıcı olarak silmek istediğinize emin misiniz?`,
-                () => {
-                    movies = movies.filter(m => m.id !== movieId);
-                    saveMoviesToStorage();
-                    renderAdminMovieList();
-                    renderHeroBanner();
-                    renderMovies();
-                    showToast("Film silindi.", "info");
+                `"${movie.title}" filmini kalıcı olarak silmek istediğinize emin misiniz? Filmin yorumları da silinir.`,
+                async () => {
+                    try {
+                        await FB.deleteMovie(movieId);
+                        showToast("Film silindi.", "info");
+                    } catch (err) {
+                        console.error(err);
+                        showToast("Film silinemedi. Yönetici girişini kontrol et.", "error");
+                    }
                 }
             );
         }
 
-        function confirmResetDefaults() {
+        async function runImport(list) {
+            if (!isAdmin || !window.FB) return;
+            const valid = list.filter(m => m && m.id && m.title && m.poster && m.videoUrl
+                && !String(m.videoUrl).startsWith("blob:") && String(m.poster).length <= 700000);
+            const skippedBad = list.length - valid.length;
+            try {
+                const r = await FB.importMovies(valid);
+                let msg = `${r.added} film aktarıldı`;
+                if (r.existing) msg += `, ${r.existing} film zaten vardı`;
+                if (skippedBad || r.failed) msg += `, ${skippedBad + r.failed} film atlandı (video/afiş uygun değil)`;
+                showToast(msg + ".", r.added ? "success" : "info");
+            } catch (err) {
+                console.error(err);
+                showToast("Aktarma başarısız. Yönetici girişini kontrol et.", "error");
+            }
+        }
+
+        function importLocalMovies() {
             if (!isAdmin) return;
-            openConfirmDialog(
-                "Varsayılanlara Sıfırla",
-                "Tüm eklenen filmler silinecek ve başlangıçtaki örnek Türkçe dublaj filmler geri yüklenecektir. Onaylıyor musunuz?",
-                () => {
-                    movies = JSON.parse(JSON.stringify(DEFAULT_MOVIES));
-                    userRatings = {};
-                    saveMoviesToStorage();
-                    saveUserRatingsToStorage();
-                    resetAdminForm();
-                    renderAdminMovieList();
-                    renderHeroBanner();
-                    renderMovies();
-                    showToast("Varsayılan film arşivi geri yüklendi.", "success");
-                }
-            );
+            let local = [];
+            try { local = JSON.parse(localStorage.getItem(STORAGE_KEYS.MOVIES) || "[]"); } catch (err) {}
+            if (!Array.isArray(local) || local.length === 0) {
+                showToast("Bu telefonda aktarılacak film bulunamadı.", "info");
+                return;
+            }
+            runImport(local);
+        }
+
+        function importSampleMovies() {
+            if (!isAdmin) return;
+            runImport(JSON.parse(JSON.stringify(DEFAULT_MOVIES)));
         }
 
         /**
@@ -1416,6 +1661,166 @@
                 closeAdminModal();
                 closeConfirmDialog();
             }
+        });
+    </script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect }
+            from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, doc, onSnapshot, setDoc, getDoc, getDocs, addDoc, deleteDoc,
+                 updateDoc, writeBatch, increment, serverTimestamp, query, orderBy, limit }
+            from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBB3H8CtTC8OXrtYtkDObrspnr-aVe_KoE",
+            authDomain: "filmtr-3590a.firebaseapp.com",
+            projectId: "filmtr-3590a",
+            storageBucket: "filmtr-3590a.firebasestorage.app",
+            messagingSenderId: "294287571036",
+            appId: "1:294287571036:web:119a348810e82b0aae8e99"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const clean = obj => JSON.parse(JSON.stringify(obj));
+
+        window.FB = {
+            signIn: (email, password) => signInWithEmailAndPassword(auth, email, password),
+            signOut: () => signOut(auth),
+
+            saveMovie: async (movie, unfeatureIds = []) => {
+                const { id, ...data } = movie;
+                const batch = writeBatch(db);
+                batch.set(doc(db, "movies", id), clean(data));
+                unfeatureIds.forEach(otherId => batch.update(doc(db, "movies", otherId), { featured: false }));
+                await batch.commit();
+            },
+
+            deleteMovie: async (id) => {
+                const comments = await getDocs(collection(db, "movies", id, "comments"));
+                const batch = writeBatch(db);
+                comments.forEach(d => batch.delete(d.ref));
+                batch.delete(doc(db, "movies", id));
+                await batch.commit();
+            },
+
+            importMovies: async (list) => {
+                let added = 0, existing = 0, failed = 0;
+                for (const m of list) {
+                    try {
+                        const ref = doc(db, "movies", m.id);
+                        const snap = await getDoc(ref);
+                        if (snap.exists()) { existing++; continue; }
+                        const { id, ...data } = m;
+                        await setDoc(ref, clean(data));
+                        added++;
+                    } catch (err) {
+                        console.error(err);
+                        failed++;
+                    }
+                }
+                return { added, existing, failed };
+            },
+
+            rate: (movieId, delta, isNewVote) =>
+                updateDoc(doc(db, "movies", movieId), {
+                    ratingSum: increment(delta),
+                    ratingCount: increment(isNewVote ? 1 : 0)
+                }),
+
+            watchComments: (movieId, onData, onError) =>
+                onSnapshot(
+                    query(collection(db, "movies", movieId, "comments"), orderBy("createdAt", "desc"), limit(100)),
+                    snap => onData(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+                    err => onError && onError(err)
+                ),
+
+            addComment: (movieId, name, text) =>
+                addDoc(collection(db, "movies", movieId, "comments"), {
+                    name, text, uid: auth.currentUser.uid, createdAt: serverTimestamp()
+                }),
+
+            deleteComment: (movieId, commentId) =>
+                deleteDoc(doc(db, "movies", movieId, "comments", commentId))
+        };
+
+        // ===== GOOGLE İLE ZORUNLU GİRİŞ EKRANI =====
+        const gate = document.createElement("div");
+        gate.id = "login-gate";
+        gate.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:#0b0b0f;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:system-ui,sans-serif;overflow:auto;";
+        gate.innerHTML = `
+            <h1 style="color:#e50914;margin:0 0 8px;font-size:34px;font-weight:800">FilmTR</h1>
+            <p style="margin:0 0 28px;opacity:.8">Devam etmek için Google hesabınla giriş yap.</p>
+            <button id="g-google" type="button" style="padding:14px 22px;font-size:16px;border:0;border-radius:10px;background:#fff;color:#111;font-weight:700">Google ile Giriş Yap</button>
+            <p id="g-msg" style="margin:16px 0 0;font-size:14px;color:#ff8a8a;min-height:18px"></p>
+            <button id="g-admin-link" type="button" style="margin-top:22px;background:none;border:0;color:#999;font-size:13px;text-decoration:underline">Yönetici girişi</button>
+            <form id="g-admin-form" style="display:none;margin-top:12px;width:100%;max-width:300px">
+                <input name="email" type="email" placeholder="E-posta" autocomplete="username" style="width:100%;box-sizing:border-box;padding:11px;margin-bottom:8px;border-radius:8px;border:1px solid #333;background:#16161c;color:#fff">
+                <input name="password" type="password" placeholder="Şifre" autocomplete="current-password" style="width:100%;box-sizing:border-box;padding:11px;margin-bottom:8px;border-radius:8px;border:1px solid #333;background:#16161c;color:#fff">
+                <button type="submit" style="width:100%;padding:11px;border:0;border-radius:8px;background:#e50914;color:#fff;font-weight:700">Giriş Yap</button>
+            </form>`;
+        document.body.appendChild(gate);
+
+        const logoutBtn = document.createElement("button");
+        logoutBtn.textContent = "Çıkış";
+        logoutBtn.style.cssText = "position:fixed;left:10px;bottom:10px;z-index:60;display:none;padding:6px 12px;border:0;border-radius:8px;background:rgba(229,9,20,.85);color:#fff;font-size:12px";
+        logoutBtn.onclick = () => signOut(auth);
+        document.body.appendChild(logoutBtn);
+
+        const gMsg = gate.querySelector("#g-msg");
+        const gForm = gate.querySelector("#g-admin-form");
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: "select_account" });
+
+        gate.querySelector("#g-google").onclick = async () => {
+            gMsg.textContent = "";
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (e) {
+                if (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") return;
+                try { await signInWithRedirect(auth, provider); }
+                catch (e2) { gMsg.textContent = "Giriş başarısız: " + (e2.code || e2.message); }
+            }
+        };
+
+        gate.querySelector("#g-admin-link").onclick = () => {
+            gForm.style.display = gForm.style.display === "none" ? "block" : "none";
+        };
+
+        gForm.onsubmit = async ev => {
+            ev.preventDefault();
+            gMsg.textContent = "";
+            try {
+                const cred = await signInWithEmailAndPassword(auth, gForm.email.value.trim(), gForm.password.value);
+                if (typeof ADMIN_UID === "undefined" || cred.user.uid !== ADMIN_UID) {
+                    await signOut(auth);
+                    gMsg.textContent = "Bu hesap yönetici değil.";
+                }
+            } catch (err) {
+                gMsg.textContent = "Hatalı e-posta veya şifre.";
+            }
+        };
+
+        // Giriş yapmadan (veya eski anonim oturumla) içeri girilemez
+        let unsubMovies = null;
+        onAuthStateChanged(auth, user => {
+            if (user && user.isAnonymous) { signOut(auth); return; }
+            const loggedIn = !!user;
+            gate.style.display = loggedIn ? "none" : "flex";
+            logoutBtn.style.display = loggedIn ? "block" : "none";
+
+            // Filmler canlı olarak güncellenir (sadece giriş yapılmışsa)
+            if (loggedIn && !unsubMovies) {
+                unsubMovies = onSnapshot(
+                    collection(db, "movies"),
+                    snap => window.onMoviesSnapshot && window.onMoviesSnapshot(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+                    err => window.onFirebaseError && window.onFirebaseError(err)
+                );
+            }
+            if (!loggedIn && unsubMovies) { unsubMovies(); unsubMovies = null; }
+
+            if (window.onAuthChanged) window.onAuthChanged(user);
         });
     </script>
     <script>
